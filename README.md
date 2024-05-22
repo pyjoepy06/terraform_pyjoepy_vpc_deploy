@@ -85,15 +85,6 @@ No requirements.
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
-# Examples:
-
-Deploy a 2x2 (2 Public Subnets and 2 Private Subnets) VPC:
-<!---Refer to diagram in docs folder named VPC_2x2.png--->
-![aws_vpc_2x2](./docs/VPC_2x2.png?raw=true "VPC_2x2")
-
-Deploy a 3x1 (3 Public Subnets and 1 Private Subnets) VPC:
-<!---Refer to diagram in docs folder named VPC_3x1.png--->
-![aws_vpc_3x1](./docs/VPC_3x1.png?raw=true "VPC_3x1")
 
 ### How can this help with day-to-day tasks
 
