@@ -16,8 +16,8 @@ module "dev_vpc_east_2_deploy" {
   name               = "dev_us_east" #VPC Name
   cidr               = "172.26.0.0/23" #VPC CIDR
   availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"] #VPC AZ Zone
-  public_subnets     = ["172.26.1.128/25"] #Public Subnets with IGW routes auto-added - **1 Public Subnet Must Exist pending feature fix**
-  private_subnets    = ["172.26.1.0/25", "172.26.1.128/25", "172.26.0.0/25"] #Private Subnets
+  public_subnets     = ["172.26.0.0/25"] #Public Subnets with IGW routes auto-added - **1 Public Subnet Must Exist pending feature fix**
+  private_subnets    = ["172.26.1.0/25", "172.26.1.128/25", "172.26.0.128/25"] #Private Subnets
   enable_nat_gateway = false #Set to either true or false - Creates a NAT Gateway for Private Subnets Outbound Internet Connectivity
   single_nat_gateway = false #Set to either true or false - Creates Either one NAT gateway or enables HA per AZ provided NAT Gateways in the Private Subnets
 }

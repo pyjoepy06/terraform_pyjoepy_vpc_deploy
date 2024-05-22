@@ -1,4 +1,4 @@
-## AWS_TF_VPC_DEPLOY
+# AWS_TF_VPC_DEPLOY
 
 Deploying VPCs in AWS varies per client this code is used to deploy a VPC with multiple subnets and is able to enable or disable NAT Gateway on a deployed VPC by simply updating one variable as true or false
 
@@ -12,7 +12,15 @@ $ terraform plan
 $ terraform apply
 ```
 
-# Usage
+### How can this help with day-to-day tasks
+
+- Run this script to deploy any kind of VPC you want (PublicxPrivate) 3x1, 2x2, 4x4, etc
+- To run this script in multi-regions in the same account simply use the Projects Folder and create sub-folders with the main.tf and providers.tf files
+- In the main.tf and providers.tf and update your region and variables, cd to the folder, run the terraform init, plan, and apply and watch your VPC get build!!!
+
+## Usage
+
+The main.tf will execute the following code below are examples of deploy multiple options of VPCs
 
 ```hcl
 module "prod_vpc_east_1_deploy" {
@@ -33,8 +41,8 @@ module "dev_vpc_east_2_deploy" {
   name               = "dev_us_east" #VPC Name
   cidr               = "172.26.0.0/23" #VPC CIDR
   availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"] #VPC AZ Zone
-  public_subnets     = ["172.26.1.128/25"] #Public Subnets with IGW routes auto-added - **1 Public Subnet Must Exist pending feature fix**
-  private_subnets    = ["172.26.1.0/25", "172.26.1.128/25", "172.26.0.0/25"] #Private Subnets
+  public_subnets     = ["172.26.0.0/25"] #Public Subnets with IGW routes auto-added - **1 Public Subnet Must Exist pending feature fix**
+  private_subnets    = ["172.26.1.0/25", "172.26.1.128/25", "172.26.0.128/25"] #Private Subnets
   enable_nat_gateway = false #Set to either true or false - Creates a NAT Gateway for Private Subnets Outbound Internet Connectivity
   single_nat_gateway = false #Set to either true or false - Creates Either one NAT gateway or enables HA per AZ provided NAT Gateways in the Private Subnets
 }
@@ -107,11 +115,11 @@ No requirements.
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
 
-### How can this help with day-to-day tasks
+### Peding Feature Fix
 
-- Run this script to deploy any kind of VPC you want (PublicxPrivate) 3x1, 2x2, 4x4, etc
-- To run this script in multi-regions in the same account simply use the Projects Folder and create sub-folders with the main.tf and providers.tf files
-- In the main.tf and providers.tf and update your region and variables, cd to the folder, run the terraform init, plan, and apply and watch your VPC get build!!!
+- If no Public Subnet is provide the code errors out due to tuple lookup
+- Reverting from Single NAT to HA Nat Gateway needs to be fixed
+- Deleting Subnets that have TGW attachments in them causes timeout issues, possibly create code to that detects if ENIs are used in Subnets for TGW and/or delete subnets manually
 
 ## Authors
 
