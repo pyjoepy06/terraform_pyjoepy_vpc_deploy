@@ -120,6 +120,7 @@ No requirements.
 - If no Public Subnet is provide the code errors out due to tuple lookup
 - Reverting from Single NAT to HA Nat Gateway needs to be fixed
 - Deleting Subnets that have TGW attachments in them causes timeout issues, possibly create code to that detects if ENIs are used in Subnets for TGW and/or delete subnets manually
+- During TGW Attachment add code to add routes to all VPC Route tables for 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 to the TGW Attachement
 
 ## Authors
 
