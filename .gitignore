@@ -1,0 +1,7 @@
+
+*.hcl
+*.json
+*.exe
+*.tfstate
+providers.tf
+providers.tf
