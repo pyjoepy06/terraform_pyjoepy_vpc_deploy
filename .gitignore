@@ -5,3 +5,4 @@
 *.tfstate
 providers.tf
 providers.tf
+terraform.tfstate.backup
