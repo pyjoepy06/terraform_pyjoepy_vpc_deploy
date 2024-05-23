@@ -103,8 +103,8 @@ No requirements.
 | <a name="region"></a> [region](#region) | The primary region where Terraform will deploy infrastructure. | `string` | n/a | no |
 | <a name="create_vpc"></a> [create_vpc](#create_vpc) |  Controls if VPC should be created (it affects almost all resources) | `bool` | true | yes | n/a |
 | <a name="cidr"></a> [cidr](#cidr) |  The CIDR block for the VPC. Default value is a valid CIDR, but should be overridden | `"10.20.0.0/16"` | n/a | yes |
-| <a name=public_subnet_suffix"></a> [public\_subnet\_suffix](#public\_subnet\_suffix) |  Suffix to append to public subnets name | `string` | `"public"` |no |
-| <a name=private_subnet_suffix"></a> [private\_subnet\_suffix](#private\_subnet\_suffix) |  Suffix to append to private subnets name | `string` | `"private"` | no |
+| <a name="public_subnet_suffix"></a> [public\_subnet\_suffix](#public\_subnet\_suffix) |  Suffix to append to public subnets name | `string` | `"public"` |no |
+| <a name="private_subnet_suffix"></a> [private\_subnet\_suffix](#private\_subnet\_suffix) |  Suffix to append to private subnets name | `string` | `"private"` | no |
 | <a name="public_subnets"></a> [public\_subnets](#public\_subnets) | A list of public subnets inside the VPC | `list(string)` | `[]` | yes |
 | <a name="private_subnets"></a> [private\_subnets](#private\_subnets) | A list of private subnets inside the VPC | `list(string)` | `[]` | yes |
 | <a name="availability_zones"></a> [availability\_zones](#availability\_zones) | A list of availablity zones for your subnets | `list(string)` | `[]` | yes |
@@ -123,7 +123,7 @@ No requirements.
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
 
-### Peding Feature Fix
+### Pending Feature Fix
 
 - If no Public Subnet is provide the code errors out due to tuple lookup
 - Reverting from Single NAT to HA Nat Gateway needs to be fixed
