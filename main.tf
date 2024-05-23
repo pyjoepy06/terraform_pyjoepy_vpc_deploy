@@ -34,9 +34,9 @@ module "transit_gateway_us_east_1" {
 #Module for Enable VPC Attachments
 module "prod_vpc_east_1_tgw_attach" {
   source        = "./modules/transit_vpc_attach"
-  subnet_ids    = module.prod_vpc_east_1_deploy.private_subnets  #Leverage Private Subnets in VPC Module Above
-  transit_gw_id = module.transit_gateway_us_east_1.tgw_id #Leverage TGW ID in module above
-  vpc_id        = module.prod_vpc_east_1_deploy.vpc_id        #Leverage TGW ID in module above
+  subnet_ids    = module.prod_vpc_east_1_deploy.private_subnets #Leverage Private Subnets in VPC Module Above
+  transit_gw_id = module.transit_gateway_us_east_1.tgw_id       #Leverage TGW ID in module above
+  vpc_id        = module.prod_vpc_east_1_deploy.vpc_id          #Leverage TGW ID in module above
   #region        = "us-east-1"
   pub_route_tables        = module.prod_vpc_east_1_deploy.public_rtb_id
   pri_route_tables        = module.prod_vpc_east_1_deploy.private_rtb_id
@@ -47,9 +47,9 @@ module "prod_vpc_east_1_tgw_attach" {
 #Module for Enable VPC Attachments
 module "dev_vpc_east_2_tgw_attach" {
   source        = "./modules/transit_vpc_attach"
-  subnet_ids    = module.dev_vpc_east_2_deploy.private_subnets   #Leverage Private Subnets in VPC Module Above
-  transit_gw_id = module.transit_gateway_us_east_1.tgw_id #Leverage TGW ID in module above
-  vpc_id        = module.dev_vpc_east_2_deploy.vpc_id        #Leverage TGW ID in module above
+  subnet_ids    = module.dev_vpc_east_2_deploy.private_subnets #Leverage Private Subnets in VPC Module Above
+  transit_gw_id = module.transit_gateway_us_east_1.tgw_id      #Leverage TGW ID in module above
+  vpc_id        = module.dev_vpc_east_2_deploy.vpc_id          #Leverage TGW ID in module above
   #region        = "us-east-1"
   pub_route_tables        = module.dev_vpc_east_2_deploy.public_rtb_id
   pri_route_tables        = module.dev_vpc_east_2_deploy.private_rtb_id
