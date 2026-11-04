@@ -3,6 +3,7 @@
 *.json
 *.exe
 *.tfstate
+.terraform
 providers.tf
 providers.tf
 terraform.tfstate.backup
