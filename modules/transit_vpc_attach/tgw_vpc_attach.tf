@@ -1,15 +1,15 @@
 locals {
-  # Prefer the unified interface; preserve legacy route table inputs.
+  # Do not derive resource instance keys from apply-time route table IDs.
+  # Caller should provide each route table once; duplicate IDs would create
+  # duplicate routes and cause AWS RouteAlreadyExists errors.
   legacy_route_tables = concat(
-    var.pub_route_tables, var.pri_route_tables,
-    coalesce(var.single_ngw_route_tables, []),
-    coalesce(var.multi_ngw_route_tables, [])
+    var.pub_route_tables,
+    var.pri_route_tables,
+    var.single_ngw_route_tables == null ? [] : var.single_ngw_route_tables,
+    var.multi_ngw_route_tables == null ? [] : var.multi_ngw_route_tables
   )
-  selected_route_tables = distinct(var.route_table_ids != null ? var.route_table_ids : local.legacy_route_tables)
-  route_pairs = {
-    for pair in setproduct(local.selected_route_tables, var.destination_cidrs) :
-    "${pair[0]}|${pair[1]}" => { route_table_id = pair[0], cidr = pair[1] }
-  }
+  selected_route_tables = var.route_table_ids == null ? local.legacy_route_tables : var.route_table_ids
+  destination_count     = length(var.destination_cidrs)
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "vpc_attachment" {
@@ -20,9 +20,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "vpc_attachment" {
 }
 
 resource "aws_route" "tgw_routes" {
-  for_each               = local.route_pairs
-  route_table_id         = each.value.route_table_id
-  destination_cidr_block = each.value.cidr
+  count = length(local.selected_route_tables) * local.destination_count
+
+  route_table_id         = local.selected_route_tables[floor(count.index / local.destination_count)]
+  destination_cidr_block = var.destination_cidrs[count.index % local.destination_count]
   transit_gateway_id     = var.transit_gw_id
-  depends_on             = [aws_ec2_transit_gateway_vpc_attachment.vpc_attachment]
+
+  depends_on = [aws_ec2_transit_gateway_vpc_attachment.vpc_attachment]
 }
