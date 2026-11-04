@@ -14,10 +14,18 @@ variable "amazon_side_asn" {
   type = number
   default = 64512
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1b3a3f4 (Terraform NAT Gateway Update)
 variable "tags" {
   type    = map(string)
   default = {}
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1b3a3f4 (Terraform NAT Gateway Update)
 variable "subnet_ids" {
   description = "One attachment subnet per Availability Zone."
   type = list(string)

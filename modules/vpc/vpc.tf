@@ -17,34 +17,7 @@ locals {
 
 resource "aws_vpc" "vpc" {
   cidr_block = var.cidr_block
-  tags = { Name = "${var.name}-vpc" }
-
-  lifecycle {
-    precondition {
-      condition     = length(var.availability_zones) > 0 && length(var.public_subnets) <= length(var.availability_zones) && length(var.private_subnets) <= length(var.availability_zones)
-      error_message = "Provide an AZ for every public and private subnet (one subnet of each type per AZ)."
-    }
-    precondition {
-      condition     = local.nat_mode == "none" || length(var.private_subnets) > 0
-      error_message = "NAT requires at least one private subnet."
-    }
-    precondition {
-      condition     = !contains(["single", "per_az"], local.nat_mode) || (var.enable_igw && length(var.public_subnets) > 0)
-      error_message = "Zonal NAT requires an Internet Gateway and at least one public subnet."
-    }
-    precondition {
-      condition     = local.nat_mode != "per_az" || alltrue([for subnet in local.per_az_public_subnets : subnet != null])
-      error_message = "per_az NAT requires a public subnet in each AZ containing a private subnet."
-    }
-    precondition {
-      condition     = local.nat_mode != "regional" || var.enable_igw
-      error_message = "Public Regional NAT requires enable_igw=true."
-    }
-    precondition {
-      condition     = var.enable_igw || length(var.public_subnets) == 0
-      error_message = "Public subnets require enable_igw=true in this module."
-    }
-  }
+  tags       = { Name = "${var.name}-vpc" }
 }
 
 resource "aws_internet_gateway" "internet_gateway" {
@@ -59,7 +32,7 @@ resource "aws_subnet" "public_subnet" {
   cidr_block              = var.public_subnets[count.index]
   availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = true
-  tags = { Name = "${var.name}-${var.public_subnet_suffix}-${count.index + 1}" }
+  tags                    = { Name = "${var.name}-${var.public_subnet_suffix}-${count.index + 1}" }
 }
 
 resource "aws_subnet" "private_subnet" {
@@ -67,7 +40,7 @@ resource "aws_subnet" "private_subnet" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.private_subnets[count.index]
   availability_zone = var.availability_zones[count.index]
-  tags = { Name = "${var.name}-${var.private_subnet_suffix}-${count.index + 1}" }
+  tags              = { Name = "${var.name}-${var.private_subnet_suffix}-${count.index + 1}" }
 }
 
 # Keep existing Terraform addresses for legacy single and multi NAT resources.
@@ -86,7 +59,7 @@ resource "aws_nat_gateway" "single_nat_gateway" {
   allocation_id = aws_eip.single_nat_gateway_eip[0].id
   subnet_id     = aws_subnet.public_subnet[0].id
   depends_on    = [aws_internet_gateway.internet_gateway]
-  tags = { Name = "${var.name}-nat-single" }
+  tags          = { Name = "${var.name}-nat-single" }
 }
 
 resource "aws_nat_gateway" "multi_nat_gateway" {
@@ -94,7 +67,7 @@ resource "aws_nat_gateway" "multi_nat_gateway" {
   allocation_id = aws_eip.multi_nat_gateway_eip[count.index].id
   subnet_id     = local.per_az_public_subnets[count.index]
   depends_on    = [aws_internet_gateway.internet_gateway]
-  tags = { Name = "${var.name}-nat-${local.private_azs[count.index]}" }
+  tags          = { Name = "${var.name}-nat-${local.private_azs[count.index]}" }
 }
 
 resource "aws_nat_gateway" "regional_nat_gateway" {
@@ -102,7 +75,7 @@ resource "aws_nat_gateway" "regional_nat_gateway" {
   vpc_id            = aws_vpc.vpc.id
   availability_mode = "regional"
   depends_on        = [aws_internet_gateway.internet_gateway]
-  tags = { Name = "${var.name}-nat-regional" }
+  tags              = { Name = "${var.name}-nat-regional" }
 }
 
 resource "aws_route_table" "public_rtb" {

@@ -22,9 +22,26 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "vpc_attachment" {
 resource "aws_route" "tgw_routes" {
   count = length(local.selected_route_tables) * local.destination_count
 
+<<<<<<< HEAD
   route_table_id         = local.selected_route_tables[floor(count.index / local.destination_count)]
   destination_cidr_block = var.destination_cidrs[count.index % local.destination_count]
   transit_gateway_id     = var.transit_gw_id
 
   depends_on = [aws_ec2_transit_gateway_vpc_attachment.vpc_attachment]
 }
+=======
+  route_table_id = local.selected_route_tables[
+    floor(count.index / local.destination_count)
+  ]
+
+  destination_cidr_block = var.destination_cidrs[
+    count.index % local.destination_count
+  ]
+
+  transit_gateway_id = var.transit_gw_id
+
+  depends_on = [
+    aws_ec2_transit_gateway_vpc_attachment.vpc_attachment
+  ]
+}
+>>>>>>> 1b3a3f4 (Terraform NAT Gateway Update)
