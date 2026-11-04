@@ -1,65 +1,25 @@
-variable "name" {
-  description = "Name to be used on all the resources as identifier"
-  type        = string
-  default     = ""
-}
-
-variable "default_route_table_association" {
-  description = "Whether resource attachments are automatically associated with the default association route table. Valid values: disable, enable. Default value: enable"
-  default     = "enable"
-}
-
-variable "description" {
-  description = "Description of the EC2 Transit Gateway."
-  default     = "Transit Gateway"
-}
-
-variable "amazon_side_asn" {
-  description = "Private Autonomous System Number (ASN) for the Amazon side of a BGP session."
-  type        = number
-  default     = "64512"
-}
-
-variable "tags" {
-  description = "A mapping of tags to assign to the resource"
-  type        = map(string)
-  default     = {}
-}
-
+variable "name" { type = string, default = "" }
+variable "default_route_table_association" { type = string, default = "enable" }
+variable "description" { type = string, default = "Transit Gateway" }
+variable "amazon_side_asn" { type = number, default = 64512 }
+variable "tags" { type = map(string), default = {} }
 variable "subnet_ids" {
-  description = "A list of public subnets inside the VPC"
-  type        = list(string)
-  default     = []
+  description = "One attachment subnet per Availability Zone."
+  type = list(string)
 }
-
-variable "pub_route_tables" {
-  description = "All the routes tables the VPC uses"
-  type        = list(string)
-  default     = [""]
+variable "vpc_id" { type = string }
+variable "transit_gw_id" { type = string }
+variable "route_table_ids" {
+  description = "Unified route table IDs; when null legacy inputs are used."
+  type = list(string)
+  default = null
 }
-
-variable "pri_route_tables" {
-  description = "All the routes tables the VPC uses"
-  type        = list(string)
-  default     = [""]
+variable "destination_cidrs" {
+  description = "Prefixes routed to TGW. Defaults preserve the original RFC1918 routing behavior."
+  type = list(string)
+  default = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 }
-
-variable "single_ngw_route_tables" {
-  description = "All the routes tables the VPC uses"
-}
-
-variable "multi_ngw_route_tables" {
-  description = "All the routes tables the VPC uses"
-}
-
-variable "vpc_id" {
-  description = "VPC ID"
-  type        = string
-  default     = ""
-}
-
-variable "transit_gw_id" {
-  description = "Transit Gateway ID"
-  type        = string
-  default     = ""
-}
+variable "pub_route_tables" { type = list(string), default = [] }
+variable "pri_route_tables" { type = list(string), default = [] }
+variable "single_ngw_route_tables" { type = list(string), default = null }
+variable "multi_ngw_route_tables" { type = list(string), default = null }
