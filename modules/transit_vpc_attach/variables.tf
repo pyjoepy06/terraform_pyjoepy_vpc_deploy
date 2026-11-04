@@ -14,7 +14,10 @@ variable "amazon_side_asn" {
   type = number
   default = 64512
 }
-variable "tags" { type = map(string), default = {} }
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
 variable "subnet_ids" {
   description = "One attachment subnet per Availability Zone."
   type = list(string)
