@@ -1,138 +1,68 @@
-# AWS_TF_VPC_DEPLOY
+# Terraform AWS VPC Deployment — NAT modernization
 
-Deploying VPCs in AWS varies per client this code is used to deploy a VPC with multiple subnets and is able to enable or disable NAT Gateway on a deployed VPC by simply updating one variable as true or false
+VPC, subnet, NAT Gateway and Transit Gateway attachment modules. Supports **none**, **single**, **per_az**, and **regional** NAT configurations.
 
-## Requirements for executing code
+## NAT modes
 
-To run this code you need to leverage, also update your **backend.tf** if your saving state files to S3 or Terraform Cloud:
+| Mode | Behavior | Public subnets needed for NAT? |
+| --- | --- | --- |
+| `none` | No NAT; private subnets have no default internet route | No |
+| `single` | One zonal NAT, shared across private AZs | Yes |
+| `per_az` | One zonal NAT in each AZ containing private subnets | Yes, one per private AZ |
+| `regional` | One Regional NAT resource, AWS-managed AZ expansion | No |
 
-```bash
-$ terraform init
-$ terraform plan
-$ terraform apply
-```
+Set `nat_gateway_mode = "regional"` on a VPC module to use the new option. The legacy `enable_nat_gateway` and `single_nat_gateway` flags remain supported **only when** `nat_gateway_mode = null` (the default). Regional NAT requires AWS provider >= 6.24.0 and a supported commercial AWS Region. Public Regional NAT requires an Internet Gateway, but not public subnets.
 
-### How can this help with day-to-day tasks
-
-- Run this script to deploy any kind of VPC you want (PublicxPrivate) 3x1, 2x2, 4x4, etc
-- To run this script in multi-regions in the same account simply use the Projects Folder and create sub-folders with the main.tf and providers.tf files
-- In the main.tf and providers.tf and update your region and variables, cd to the folder, run the terraform init, plan, and apply and watch your VPC get build!!!
-
-## Usage
-
-The main.tf will execute the following code below are examples of deploy multiple options of VPCs and the VPCs get attached to a TGW with all Class A, Class B, Class C routes auto added to the route table
+### Example: private-only Regional NAT VPC
 
 ```hcl
-module "prod_vpc_east_1_deploy" {
+module "workload_vpc" {
   source             = "./modules/vpc"
-  region             = "us-east-1"
-  name               = "prod_us_east"                       #VPC Name
-  cidr_block         = "172.25.0.0/20"                      #VPC CIDR
-  availability_zones = ["us-east-1a", "us-east-1b"]         #VPC AZ Zone
-  public_subnets     = ["172.25.0.0/25", "172.25.0.128/25"] #Public Subnets with IGW routes auto-added - **1 Public Subnet Must Exist pending feature fix**
-  private_subnets    = ["172.25.1.0/25", "172.25.1.128/25"] #Private Subnets
-  enable_nat_gateway = false                                #Set to either true or false - Creates a NAT Gateway for Private Subnets Outbound Internet Connectivity
-  single_nat_gateway = false                                #Set to either true or false - Creates Either one NAT gateway or enables HA per AZ provided NAT Gateways in the Private Subnets
-}
-
-module "dev_vpc_east_2_deploy" {
-  source             = "./modules/vpc"
-  region             = "us-east-1"
-  name               = "dev_us_east"                                           #VPC Name
-  cidr_block         = "172.26.0.0/23"                                         #VPC CIDR
-  availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]              #VPC AZ Zone
-  public_subnets     = ["172.26.0.0/25"]                                       #Public Subnets with IGW routes auto-added - **1 Public Subnet Must Exist pending feature fix**
-  private_subnets    = ["172.26.1.0/25", "172.26.1.128/25", "172.26.0.128/25"] #Private Subnets
-  enable_nat_gateway = false                                                   #Set to either true or false - Creates a NAT Gateway for Private Subnets Outbound Internet Connectivity
-  single_nat_gateway = false                                                   #Set to either true or false - Creates Either one NAT gateway or enables HA per AZ provided NAT Gateways in the Private Subnets
-}
-
-module "transit_gateway_us_east_1" {
-  source                          = "./modules/transit_gateway"
-  name                            = "prod-us-east-1"
-  default_route_table_association = "enable"
-  description                     = "Transit Gateway for US-East-1 VPCs"
-  amazon_side_asn                 = 64514
-  region                          = "us-east-1"
-}
-
-#Module for Enable VPC Attachments
-module "prod_vpc_east_1_tgw_attach" {
-  source        = "./modules/transit_vpc_attach"
-  subnet_ids    = module.prod_vpc_east_1_deploy.private_subnets  #Leverage Private Subnets in VPC Module Above
-  transit_gw_id = module.transit_gateway_us_east_1.tgw_id #Leverage TGW ID in module above
-  vpc_id        = module.prod_vpc_east_1_deploy.vpc_id        #Leverage TGW ID in module above
-  #region        = "us-east-1"
-  pub_route_tables        = module.prod_vpc_east_1_deploy.public_rtb_id
-  pri_route_tables        = module.prod_vpc_east_1_deploy.private_rtb_id
-  single_ngw_route_tables = module.prod_vpc_east_1_deploy.single_nat_gw_rtb_id #If NAT Gateways are created route tables get updated else null
-  multi_ngw_route_tables  = module.prod_vpc_east_1_deploy.multi_nat_gw_rtb_id  #If NAT Gateways are created route tables get updated else null
-}
-
-#Module for Enable VPC Attachments
-module "dev_vpc_east_2_tgw_attach" {
-  source        = "./modules/transit_vpc_attach"
-  subnet_ids    = module.dev_vpc_east_2_deploy.private_subnets   #Leverage Private Subnets in VPC Module Above
-  transit_gw_id = module.transit_gateway_us_east_1.tgw_id #Leverage TGW ID in module above
-  vpc_id        = module.dev_vpc_east_2_deploy.vpc_id        #Leverage TGW ID in module above
-  #region        = "us-east-1"
-  pub_route_tables        = module.dev_vpc_east_2_deploy.public_rtb_id
-  pri_route_tables        = module.dev_vpc_east_2_deploy.private_rtb_id
-  single_ngw_route_tables = module.dev_vpc_east_2_deploy.single_nat_gw_rtb_id #If NAT Gateways are created route tables get updated else null
-  multi_ngw_route_tables  = module.dev_vpc_east_2_deploy.multi_nat_gw_rtb_id  #If NAT Gateways are created route tables get updated else null
+  name               = "workload"
+  cidr_block         = "10.50.0.0/16"
+  availability_zones = ["us-east-1a", "us-east-1b"]
+  public_subnets     = []
+  private_subnets    = ["10.50.10.0/24", "10.50.20.0/24"]
+  nat_gateway_mode   = "regional"
 }
 ```
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+### Example: Transit Gateway attachment with unified routing
 
-## Requirements
+```hcl
+module "attachment" {
+  source            = "./modules/transit_vpc_attach"
+  subnet_ids        = module.workload_vpc.tgw_attachment_subnet_ids
+  vpc_id            = module.workload_vpc.vpc_id
+  transit_gw_id     = module.transit_gateway.tgw_id
+  route_table_ids   = module.workload_vpc.all_route_table_ids
+  destination_cidrs = ["10.100.0.0/16", "172.20.0.0/16"]
+}
+```
 
-No requirements.
+The TGW module accepts the old route-table inputs when `route_table_ids` is omitted. The default destination prefixes preserve the old three RFC1918 aggregate routes, but **you should explicitly scope prefixes for production**. TGW attachments must use exactly one subnet per AZ. Subnets are mapped by position to `availability_zones`; the module supports one public and one private subnet per AZ.
 
-## Providers
+## Existing deployments: migration warnings
 
-| Name | Version |
-|------|---------|
-| aws | n/a |
+**Review `terraform plan` carefully before applying.** Changing NAT modes can replace NAT Gateways, route tables, and subnet associations and interrupt connections or change public egress IPs. The old multi-NAT logic assigned public subnets by list index, potentially placing multiple NATs in one AZ; the corrected implementation maps NATs to private AZs. Existing resources may need migration and/or recreation.
 
-## VPC Module Inputs
+The Transit Gateway route resources have been consolidated from `class_a_*`, `class_b_*`, and `class_c_*` into `aws_route.tgw_routes`. Terraform will otherwise propose deleting/recreating these route resources. Use carefully reviewed `terraform state mv` or `moved` blocks for existing state, or plan a maintenance window. Do not blindly apply this change to an existing production deployment.
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="name"></a> [name](#name) | Name to be used on all the resources as identifier | `string`  | n/a | no |
-| <a name="region"></a> [region](#region) | The primary region where Terraform will deploy infrastructure. | `string` | n/a | no |
-| <a name="create_vpc"></a> [create_vpc](#create_vpc) |  Controls if VPC should be created (it affects almost all resources) | `bool` | true | yes | n/a |
-| <a name="cidr"></a> [cidr](#cidr) |  The CIDR block for the VPC. Default value is a valid CIDR, but should be overridden | `"10.20.0.0/16"` | n/a | yes |
-| <a name="public_subnet_suffix"></a> [public\_subnet\_suffix](#public\_subnet\_suffix) |  Suffix to append to public subnets name | `string` | `"public"` |no |
-| <a name="private_subnet_suffix"></a> [private\_subnet\_suffix](#private\_subnet\_suffix) |  Suffix to append to private subnets name | `string` | `"private"` | no |
-| <a name="public_subnets"></a> [public\_subnets](#public\_subnets) | A list of public subnets inside the VPC | `list(string)` | `[]` | yes |
-| <a name="private_subnets"></a> [private\_subnets](#private\_subnets) | A list of private subnets inside the VPC | `list(string)` | `[]` | yes |
-| <a name="availability_zones"></a> [availability\_zones](#availability\_zones) | A list of availablity zones for your subnets | `list(string)` | `[]` | yes |
-| <a name="enable_nat_gateway"></a> [enable\_nat\_gateway](#enable\_nat\_gateway) | Should be true if you want to provision NAT Gateways for each of your private networks | `bool` | `false` | no |
-| <a name="single_nat_gateway"></a> [single\_nat\_gateway](#single\_nat\_gateway) | Should be true if you want to provision a single shared NAT Gateway across all of your private networks | `bool` | `false` | no |
+For new infrastructure:
 
-## VPC Module Outputs
+```bash
+terraform init -upgrade
+terraform fmt -recursive
+terraform validate
+terraform plan
+```
 
-| Name | Description |
-|------|-------------|
-| public_subnets | Subnet IDs of all public subnets |
-| private_subnets | Subnet IDs of all private subnets |
-| vpc_cidr | VPC CIDR |
-| public_ip_nat | A List of NAT Gateway Public IPs |
+This branch is for review and testing; no infrastructure has been deployed. Regional NAT charges are based on active AZs and data processing; it is not inherently cheaper than zonal NAT. Private NAT Gateway functionality is not replaced by Regional NAT.
 
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## Security note
 
+Review the existing `modules/security_groups/sg.tf` before using in production; it permits all inbound IPv4 traffic. Also review historical Terraform state files in version control for secrets and remove them safely if present.
 
-### Pending Feature Fix
+## Author
 
-- If no Public Subnet is provide the code errors out due to tuple lookup
-- Reverting from Single NAT to HA Nat Gateway needs to be fixed
-- Deleting Subnets that have TGW attachments in them causes timeout issues, possibly create code to that detects if ENIs are used in Subnets for TGW and/or delete subnets manually
-
-## Authors
-
-Module managed by [Joel Gray](https://github.com/pyjoepy06).
-
-## License
-
-Apache 2 Licensed. See LICENSE for full details.
+Joel Gray — Apache 2.0 licensed.
