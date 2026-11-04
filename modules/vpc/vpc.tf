@@ -33,7 +33,7 @@ resource "aws_vpc" "vpc" {
       error_message = "Zonal NAT requires an Internet Gateway and at least one public subnet."
     }
     precondition {
-      condition     = local.nat_mode != "per_az" || alltrue([for subnet in local.per_az_public_subnets : subnet != null])
+      condition     = local.nat_mode != "per_az" || alltrue([for az in local.private_azs : contains(slice(var.availability_zones, 0, length(var.public_subnets)), az)])
       error_message = "per_az NAT requires a public subnet in each AZ containing a private subnet."
     }
     precondition {
