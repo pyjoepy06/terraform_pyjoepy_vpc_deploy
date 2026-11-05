@@ -17,7 +17,7 @@ locals {
 
 resource "aws_vpc" "vpc" {
   cidr_block = var.cidr_block
-  tags = { Name = "${var.name}-vpc" }
+  tags       = { Name = "${var.name}-vpc" }
 
   lifecycle {
     precondition {
@@ -59,7 +59,7 @@ resource "aws_subnet" "public_subnet" {
   cidr_block              = var.public_subnets[count.index]
   availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = true
-  tags = { Name = "${var.name}-${var.public_subnet_suffix}-${count.index + 1}" }
+  tags                    = { Name = "${var.name}-${var.public_subnet_suffix}-${count.index + 1}" }
 }
 
 resource "aws_subnet" "private_subnet" {
@@ -67,7 +67,7 @@ resource "aws_subnet" "private_subnet" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.private_subnets[count.index]
   availability_zone = var.availability_zones[count.index]
-  tags = { Name = "${var.name}-${var.private_subnet_suffix}-${count.index + 1}" }
+  tags              = { Name = "${var.name}-${var.private_subnet_suffix}-${count.index + 1}" }
 }
 
 # Keep existing Terraform addresses for legacy single and multi NAT resources.
@@ -86,7 +86,7 @@ resource "aws_nat_gateway" "single_nat_gateway" {
   allocation_id = aws_eip.single_nat_gateway_eip[0].id
   subnet_id     = aws_subnet.public_subnet[0].id
   depends_on    = [aws_internet_gateway.internet_gateway]
-  tags = { Name = "${var.name}-nat-single" }
+  tags          = { Name = "${var.name}-nat-single" }
 }
 
 resource "aws_nat_gateway" "multi_nat_gateway" {
@@ -94,7 +94,7 @@ resource "aws_nat_gateway" "multi_nat_gateway" {
   allocation_id = aws_eip.multi_nat_gateway_eip[count.index].id
   subnet_id     = local.per_az_public_subnets[count.index]
   depends_on    = [aws_internet_gateway.internet_gateway]
-  tags = { Name = "${var.name}-nat-${local.private_azs[count.index]}" }
+  tags          = { Name = "${var.name}-nat-${local.private_azs[count.index]}" }
 }
 
 resource "aws_nat_gateway" "regional_nat_gateway" {
@@ -102,7 +102,7 @@ resource "aws_nat_gateway" "regional_nat_gateway" {
   vpc_id            = aws_vpc.vpc.id
   availability_mode = "regional"
   depends_on        = [aws_internet_gateway.internet_gateway]
-  tags = { Name = "${var.name}-nat-regional" }
+  tags              = { Name = "${var.name}-nat-regional" }
 }
 
 resource "aws_route_table" "public_rtb" {

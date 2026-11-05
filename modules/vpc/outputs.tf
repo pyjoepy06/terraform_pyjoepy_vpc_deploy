@@ -27,9 +27,9 @@ output "private_route_table_ids" {
 output "all_route_table_ids" {
   value = concat(aws_route_table.public_rtb[*].id, aws_route_table.global_private_rtb[*].id,
     aws_route_table.single_nat_private_rtb[*].id, aws_route_table.multi_nat_private_rtb[*].id,
-    aws_route_table.regional_private_rtb[*].id)
+  aws_route_table.regional_private_rtb[*].id)
 }
 output "tgw_attachment_subnet_ids" {
   description = "One private subnet per AZ for Transit Gateway attachments."
-  value = [for az in local.private_azs : aws_subnet.private_subnet[index(var.availability_zones, az)].id]
+  value       = [for az in local.private_azs : aws_subnet.private_subnet[index(var.availability_zones, az)].id]
 }

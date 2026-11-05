@@ -2,7 +2,7 @@ locals {
   # Do not derive resource instance keys from apply-time route table IDs.
   # Caller should provide each route table once; duplicate IDs would create
   # duplicate routes and cause AWS RouteAlreadyExists errors.
-  
+
   legacy_route_tables = concat(
     var.pub_route_tables,
     var.pri_route_tables,
